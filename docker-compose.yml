@@ -1,0 +1,35 @@
+services:
+  gatewayapi:
+    build:
+      context: .
+      dockerfile: GatewayApi/Dockerfile
+    container_name: gateway-api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"
+    depends_on:
+      consul:
+        condition: service_healthy
+    networks:
+      - gateway-network
+
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: gateway-consul
+    restart: always
+    ports:
+      - "8500:8500"
+    command: "agent -dev -client=0.0.0.0"
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gateway-network
+
+networks:
+  gateway-network:
+    driver: bridge
