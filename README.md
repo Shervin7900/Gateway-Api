@@ -103,5 +103,14 @@ The GitHub Actions workflow [`.github/workflows/ci.yml`](.github/workflows/ci.ym
 
 The `builder.sh` script automatically creates a `.tar` archive of the source code (excluding build artifacts) in the `./backups` folder during every build.
 
+## 🔒 Security Considerations
+
+- **Authentication**: All gateway routes are protected by JWT Bearer authentication. Ocelot validates the token against the IdentityServer configured in `Base-Api`.
+- **Authorization**: Route-specific scopes (`basket_api`, `customer_api`) are enforced at the gateway level.
+- **Rate Limiting**: Global and per-route rate limiting is enabled to prevent DoS attacks. Defaults are set to 10-50 requests per second depending on the environment.
+- **Consul ACLs**: Service discovery is configured to use ACL tokens. Ensure `YOUR_CONSUL_ACL_TOKEN_HERE` is replaced with a valid token in production.
+- **Downstream Encryption**: In Production, the gateway is configured to use `https` for downstream communication with microservices.
+- **Base Infrastructure**: Inherits security middlewares (Exception handling, Logging, and Performance monitoring) from the `Base-Api` submodule.
+
 ---
 *Maintained by Shervin*

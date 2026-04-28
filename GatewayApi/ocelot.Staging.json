@@ -8,6 +8,17 @@
       "ServiceName": "Basket-Api",
       "LoadBalancerOptions": {
         "Type": "LeastConnection"
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "basket_api" ]
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1s",
+        "PeriodTimespan": 1,
+        "Limit": 20
       }
     },
     {
@@ -18,6 +29,17 @@
       "ServiceName": "Customer-Api",
       "LoadBalancerOptions": {
         "Type": "LeastConnection"
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "customer_api" ]
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1s",
+        "PeriodTimespan": 1,
+        "Limit": 20
       }
     }
   ],
@@ -26,7 +48,13 @@
     "ServiceDiscoveryProvider": {
       "Host": "consul-server",
       "Port": 8500,
-      "Type": "Consul"
+      "Type": "Consul",
+      "Token": "STAGING_CONSUL_ACL_TOKEN"
+    },
+    "RateLimitOptions": {
+      "DisableRateLimitHeaders": false,
+      "QuotaExceededMessage": "Too many requests. Please try again later.",
+      "HttpStatusCode": 429
     }
   }
 }
