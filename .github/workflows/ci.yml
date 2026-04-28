@@ -1,0 +1,115 @@
+name: Gateway API CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: |
+          git submodule update --init --recursive
+          dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Security Check
+        run: dotnet list package --vulnerable --include-transitive
+
+  deploy-development:
+    name: Deploy to Development
+    needs: build-and-test
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'development'
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Initialize Submodules
+        run: git submodule update --init --recursive
+      - name: Build Docker Image
+        run: docker compose -f docker-compose.yml -f docker-compose.development.yml build
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build-and-test
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Initialize Submodules
+        run: git submodule update --init --recursive
+      - name: Build Docker Image
+        run: docker compose -f docker-compose.yml -f docker-compose.staging.yml build
+
+  deploy-production:
+    name: Deploy to Production
+    needs: build-and-test
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Initialize Submodules
+        run: git submodule update --init --recursive
+      - name: Build Docker Image
+        run: docker compose -f docker-compose.yml -f docker-compose.production.yml build
+
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: "csharp"
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

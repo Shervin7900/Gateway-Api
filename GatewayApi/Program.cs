@@ -15,10 +15,16 @@ builder.Services.AddOcelot(builder.Configuration)
 // Add BaseInfrastructure (Health checks, etc. from BaseApi submodule)
 builder.Services.AddBaseInfrastructure(builder.Configuration);
 
+// Add Consul Config
+builder.Services.AddConsulConfig(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseBaseInfrastructure("Gateway API", "Gateway API - Ocelot Gateway");
+
+// Register with Consul
+app.RegisterWithConsul(builder.Configuration, app.Lifetime);
 
 // Use Ocelot
 await app.UseOcelot();

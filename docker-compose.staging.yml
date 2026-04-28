@@ -1,0 +1,10 @@
+services:
+  gatewayapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+    ports:
+      - "5001:8080"
+
+  consul:
+    ports:
+      - "8501:8500"
