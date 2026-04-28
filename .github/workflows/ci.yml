@@ -16,9 +16,12 @@ on:
           - development
           - staging
           - production
-
-jobs:
-  build-and-test:
++
++env:
++  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
++
++jobs:
++  build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
     steps:
